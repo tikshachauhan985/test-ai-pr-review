@@ -74,7 +74,13 @@ jobs:
             });
 
             const data = await response.json();
-            const summary = data.choices?.[0]?.message?.content || "⚠️ AI could not generate a summary.";
+            console.log("🔍 OpenAI API raw response:", JSON.stringify(data, null, 2));
+
+            const summary = data.choices?.[0]?.message?.content;
+            if (!summary) {
+              throw new Error("❌ OpenAI did not return a valid summary.");
+            }
+
 
             const pr = context.payload.pull_request;
             const octokit = github; // already preloaded and authenticated
