@@ -9,32 +9,33 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-    - name: Checkout code
-      uses: actions/checkout@v3
+      - name: Checkout code
+        uses: actions/checkout@v3
 
-    - name: Run Go Lint and Vet
-      run: |
-        go install golang.org/x/lint/golint@latest
-        go vet ./... > govet.txt || true
-        golint ./... > golint.txt || true
+      - name: Run Go Lint and Vet
+        run: |
+          go install golang.org/x/lint/golint@latest
+          go vet ./... > govet.txt || true
+          golint ./... > golint.txt || true
 
-    - name: Run Go Tests
-      run: |
-        go test ./... -coverprofile=coverage.out > gotest.txt || true
+      - name: Run Go Tests
+        run: |
+          go test ./... -coverprofile=coverage.out > gotest.txt || true
 
-    - name: AI Review Summary
-      uses: actions/github-script@v6
-      env:
-        OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
-      with:
-        script: |
-          const fs = require('fs');
+      - name: AI Review Summary
+        uses: actions/github-script@v6
+        env:
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          script: |
+            const fs = require('fs');
 
-          const vet = fs.readFileSync('govet.txt', 'utf8');
-          const lint = fs.readFileSync('golint.txt', 'utf8');
-          const test = fs.readFileSync('gotest.txt', 'utf8');
+            const vet = fs.readFileSync('govet.txt', 'utf8');
+            const lint = fs.readFileSync('golint.txt', 'utf8');
+            const test = fs.readFileSync('gotest.txt', 'utf8');
 
-          const body = `
+            const body = `
 ### 🧠 AI Code Review Summary
 
 You're reviewing a PR on a Go repo. Analyze the following output and provide:
@@ -55,28 +56,27 @@ ${test || 'All tests passed'}
 Provide a short summary in Markdown.
 `;
 
-          const response = await fetch("https://api.openai.com/v1/chat/completions", {
-            method: "POST",
-            headers: {
-              "Content-Type": "application/json",
-              "Authorization": `Bearer ${process.env.OPENAI_API_KEY}`
-            },
-            body: JSON.stringify({
-              model: "gpt-4",
-              messages: [{ role: "user", content: body }],
-              temperature: 0.4
-            })
-          });
+            const response = await fetch("https://api.openai.com/v1/chat/completions", {
+              method: "POST",
+              headers: {
+                "Content-Type": "application/json",
+                "Authorization": `Bearer ${process.env.OPENAI_API_KEY}`
+              },
+              body: JSON.stringify({
+                model: "gpt-4",
+                messages: [{ role: "user", content: body }],
+                temperature: 0.4
+              })
+            });
 
-          const data = await response.json();
-          const summary = data.choices?.[0]?.message?.content || "AI could not generate a summary.";
+            const data = await response.json();
+            const summary = data.choices?.[0]?.message?.content || "⚠️ AI could not generate a summary.";
 
-          const pr = context.payload.pull_request;
-          const octokit = github.getOctokit(process.env.GITHUB_TOKEN);
-          await octokit.rest.issues.createComment({
-            issue_number: pr.number,
-            owner: context.repo.owner,
-            repo: context.repo.repo,
-            body: summary
-          });
-
+            const pr = context.payload.pull_request;
+            const octokit = github.getOctokit(process.env.GITHUB_TOKEN);
+            await octokit.rest.issues.createComment({
+              issue_number: pr.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: summary
+            });
