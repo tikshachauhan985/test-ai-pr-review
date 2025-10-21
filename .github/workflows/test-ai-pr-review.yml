@@ -36,25 +36,25 @@ jobs:
             const test = fs.readFileSync('gotest.txt', 'utf8');
 
             const body = `
-### 🧠 AI Code Review Summary
+            ### 🧠 AI Code Review Summary
 
-You're reviewing a PR on a Go repo. Analyze the following output and provide:
-- Insights about code quality
-- Potential bugs or code smells
-- Missed test cases
-- Suggestions for improvements
+            You're reviewing a PR on a Go repo. Analyze the following output and provide:
+            - Insights about code quality
+            - Potential bugs or code smells
+            - Missed test cases
+            - Suggestions for improvements
 
-### 🧪 Go Vet
-${vet || 'No issues found'}
+            ### 🧪 Go Vet
+            ${vet || 'No issues found'}
 
-### 💅 Golint
-${lint || 'No issues found'}
+            ### 💅 Golint
+            ${lint || 'No issues found'}
 
-### ✅ Tests
-${test || 'All tests passed'}
+            ### ✅ Tests
+            ${test || 'All tests passed'}
 
-Provide a short summary in Markdown.
-`;
+            Provide a short summary in Markdown.
+            `;
 
             const response = await fetch("https://api.openai.com/v1/chat/completions", {
               method: "POST",
