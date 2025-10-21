@@ -73,7 +73,7 @@ jobs:
             const summary = data.choices?.[0]?.message?.content || "⚠️ AI could not generate a summary.";
 
             const pr = context.payload.pull_request;
-            const octokit = github.getOctokit(process.env.GITHUB_TOKEN);
+            const octokit = github; // already preloaded and authenticated
             await octokit.rest.issues.createComment({
               issue_number: pr.number,
               owner: context.repo.owner,
